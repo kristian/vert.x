@@ -449,14 +449,63 @@ public class JsonArray implements Iterable<Object>, ClusterSerializable, Shareab
   }
 
   /**
-   * Does the JSON array contain the specified value? This method will scan the entire array until it finds a value
-   * or reaches the end.
+   * Returns {@code true} if this JSON Array contains the specified value.
+   * More formally, returns {@code true} if and only if this JSON array contains
+   * at least one entry {@code entry} such that {@code Objects.equals(value, entry)}.
    *
-   * @param value the value
+   * @param value the value whose presence in this JSON array is to be tested
    * @return true if it contains the value, false if not
    */
   public boolean contains(Object value) {
-    return list.contains(value);
+    return indexOf(value) >= 0;
+  }
+
+  /**
+   * Returns the index of the last occurrence of the specified value
+   * in this JSON array, or -1 if this JSON array does not contain the value.
+   * More formally, returns the highest index {@code i} such that
+   * {@code Objects.equals(value, get(i))},
+   * or -1 if there is no such index.
+   *
+   * @param value the value whose index in this JSON array is to be returned
+   * @return the index of the value in the array, or -1 if the value is not in the array
+   */
+  @SuppressWarnings("unchecked")
+  public int indexOf(Object value) {
+    if (value == null) {
+      for (int i = 0; i < list.size(); i++) {
+          if (list.get(i) == null) {
+            return i;
+          }
+      }
+    } else {
+      if (value instanceof JsonObject) {
+        for (int i = 0; i < list.size(); i++) {
+          Map<String, Object> map = ((JsonObject) value).getMap();
+          Object entry = list.get(i);
+          // no need to check "entry instanceof Map" here, as the first check in map.equals will be "entry instanceof Map" anyways, so this would be a redundant check
+          if (value.equals(entry) || map.equals(entry)) {
+            return i;
+          }
+        }
+      } else if (value instanceof JsonArray) {
+        for (int i = 0; i < list.size(); i++) {
+          List<Object> list = ((JsonArray) value).getList();
+          Object entry = list.get(i);
+          // no need to check "entry instanceof List" here, as the first check in list.equals will be "entry instanceof List" anyways, so this would be a redundant check
+          if (value.equals(entry) || list.equals(entry)) {
+            return i;
+          }
+        }
+      } else {
+        for (int i = 0; i < list.size(); i++) {
+          if (value.equals(list.get(i))) {
+            return i;
+          }
+        }
+      }
+    }
+    return -1;
   }
 
   /**
