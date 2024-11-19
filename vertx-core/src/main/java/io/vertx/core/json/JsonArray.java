@@ -449,14 +449,48 @@ public class JsonArray implements Iterable<Object>, ClusterSerializable, Shareab
   }
 
   /**
-   * Does the JSON array contain the specified value? This method will scan the entire array until it finds a value
-   * or reaches the end.
+   * Returns {@code true} if this JSON Array contains the specified value.
+   * More formally, returns {@code true} if and only if this JSON array contains
+   * at least one entry {@code entry} such that {@code Objects.equals(value, entry)}.
    *
-   * @param value the value
+   * @param value the value whose presence in this JSON array is to be tested
    * @return true if it contains the value, false if not
    */
   public boolean contains(Object value) {
-    return list.contains(value);
+    return indexOf(value) >= 0;
+  }
+
+  /**
+   * Returns the index of the last occurrence of the specified value
+   * in this JSON array, or -1 if this JSON array does not contain the value.
+   * More formally, returns the highest index {@code i} such that
+   * {@code Objects.equals(value, get(i))},
+   * or -1 if there is no such index.
+   *
+   * @param value the value whose index in this JSON array is to be returned
+   * @return the index of the value in the array, or -1 if the value is not in the array
+   */
+  public int indexOf(Object value) {
+    if (value == null) {
+      return list.indexOf(value);
+    } else {
+      Object unwrappedValue = value;
+
+      if (value instanceof JsonObject) {
+        unwrappedValue = ((JsonObject) value).getMap();
+      } else if (value instanceof JsonArray) {
+        unwrappedValue = ((JsonArray) value).getList();
+      }
+
+      for (int i = 0; i < list.size(); i++) {
+        Object entry = list.get(i);
+        // no need to check "entry instanceof Map/List" here, as the first check in unwrappedValue.equals will be "entry instanceof Map/List" anyways, so this would be a redundant check
+        if (value.equals(entry) || unwrappedValue.equals(entry)) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 
   /**
